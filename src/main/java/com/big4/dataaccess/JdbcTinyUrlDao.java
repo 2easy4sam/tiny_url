@@ -3,10 +3,10 @@ package com.big4.dataaccess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
 import java.sql.ResultSetMetaData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JdbcTinyUrlDao implements TinyUrlDao {
@@ -23,11 +23,11 @@ public class JdbcTinyUrlDao implements TinyUrlDao {
 
     @Override
     public String getLongUrl(String shortUrl) {
-        String longUrl = jdbcTemplate.queryForObject(SELECT_LONG_URL_BY_SHORT_URL, (rs, rowNum) -> {
+        final List<String> list = jdbcTemplate.query(SELECT_LONG_URL_BY_SHORT_URL, (rs, rowNum) -> {
             ResultSetMetaData metaData = rs.getMetaData();
             final int colCnt = metaData.getColumnCount();
 
-            for (int i = 1; i < colCnt; i++) {
+            for (int i = 1; i <= colCnt; i++) {
                 if (metaData.getColumnName(i).equals("long_url")) {
                     return rs.getString("long_url");
                 }
@@ -36,13 +36,13 @@ public class JdbcTinyUrlDao implements TinyUrlDao {
             return null;
         }, shortUrl);
 
-        return longUrl;
+        return list.isEmpty() ? null : list.get(0);
     }
 
     @Override
-    public void saveShortUrl(String shortUrl, String longUrl) {
+    public boolean saveShortUrl(String shortUrl, String longUrl) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        jdbcTemplate.update(INSERT_SHORT_URL, shortUrl, longUrl, sdf.format(new Date()));
+        return jdbcTemplate.update(INSERT_SHORT_URL, shortUrl, longUrl, sdf.format(new Date())) == 1;
     }
 }
