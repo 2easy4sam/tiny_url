@@ -1,8 +1,10 @@
 package com.big4.dataaccess;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.ResultSetMetaData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,13 +16,26 @@ public class JdbcTinyUrlDao implements TinyUrlDao {
 
     private final JdbcTemplate jdbcTemplate;
 
+    @Autowired
     public JdbcTinyUrlDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public String getLongUrl(String shortUrl) {
-        String longUrl = jdbcTemplate.queryForObject(SELECT_LONG_URL_BY_SHORT_URL, (rs, rowNum) -> rs.getString("long_url"), shortUrl);
+        String longUrl = jdbcTemplate.queryForObject(SELECT_LONG_URL_BY_SHORT_URL, (rs, rowNum) -> {
+            ResultSetMetaData metaData = rs.getMetaData();
+            final int colCnt = metaData.getColumnCount();
+
+            for (int i = 1; i < colCnt; i++) {
+                if (metaData.getColumnName(i).equals("long_url")) {
+                    return rs.getString("long_url");
+                }
+            }
+
+            return null;
+        }, shortUrl);
+
         return longUrl;
     }
 

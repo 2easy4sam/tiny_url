@@ -1,6 +1,8 @@
 package com.big4.controllers;
 
+import com.big4.dtos.EncodeRequest;
 import com.big4.services.TinyUrlService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ public class TinyUrlController {
 
     private final TinyUrlService tinyUrlService;
 
+    @Autowired
     public TinyUrlController(TinyUrlService tinyUrlService) {
         this.tinyUrlService = tinyUrlService;
     }
@@ -22,7 +25,8 @@ public class TinyUrlController {
     }
 
     @RequestMapping(value = "/encode", method = RequestMethod.POST)
-    public ResponseEntity<String> encode(@RequestBody String longUrl) {
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<String> encode(@RequestBody EncodeRequest request) {
+        String shortUrl = tinyUrlService.encode(request.getLongUrl());
+        return ResponseEntity.ok(shortUrl);
     }
 }
